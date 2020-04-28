@@ -1,78 +1,73 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <div class="col-sm-offset-2 col-sm-8">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    New Task
-                </div>
+    <head>
+            <meta charset="UTF-8">
+            <title>Loans</title>
+    </head>
+    <script>
 
-                <div class="panel-body">
-                    <!-- Display Validation Errors -->
-                    @include('common.errors')
+        let loans = [];
 
-                    <!-- New Task Form -->
-                    <form action="{{ url('task')}}" method="POST" class="form-horizontal">
-                        {{ csrf_field() }}
+        function addNewLoan() {
+            loans.push({
+                id: document.getElementById("name").value,
+                principle: document.getElementById("principle").value,
+                rate: document.getElementById("rate").value
+            });
+            updateLoans();
+            clearNewLoanForm();
+        }
 
-                        <!-- Task Name -->
-                        <div class="form-group">
-                            <label for="task-name" class="col-sm-3 control-label">Task</label>
+        function updateLoans() {
+            var html = ""
 
-                            <div class="col-sm-6">
-                                <input type="text" name="name" id="task-name" class="form-control" value="{{ old('task') }}">
-                            </div>
-                        </div>
+            loans.forEach(loan => {
+                html += `<li>${loan.id}: $${loan.principle} @ ${loan.rate}%</li>`
+            });
 
-                        <!-- Add Task Button -->
-                        <div class="form-group">
-                            <div class="col-sm-offset-3 col-sm-6">
-                                <button type="submit" class="btn btn-default">
-                                    <i class="fa fa-btn fa-plus"></i>Add Task
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            document.getElementById("loans").innerHTML = html;
+        }
 
-            <!-- Current Tasks -->
-            @if (count($tasks) > 0)
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Current Tasks
-                    </div>
+        function clearNewLoanForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("principle").value = "";
+            document.getElementById("rate").value = "";
+        }
 
-                    <div class="panel-body">
-                        <table class="table table-striped task-table">
-                            <thead>
-                                <th>Task</th>
-                                <th>&nbsp;</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($tasks as $task)
-                                    <tr>
-                                        <td class="table-text"><div>{{ $task->name }}</div></td>
+        function sendForm() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState === 4)
+                document.body.innerText = xhr.response;
+            };
+            xhr.open("POST", "loans.php", true);
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            var j = {
+                loans: loans,
+                extra: document.getElementById("extra").value
+            };
+            xhr.send(JSON.stringify(j));
+        }
 
-                                        <!-- Task Delete Button -->
-                                        <td>
-                                            <form action="{{ url('task/'.$task->id) }}" method="POST">
-                                                {{ csrf_field() }}
-                                                {{ method_field('DELETE') }}
+    </script>
+    <body>
+        <div>
+            Loans:<br/>
+            <ul id="loans">
+                <!--Loans Appear here-->
+            </ul><br/>
+            New Loan:<br/>
+            <label for="name">Name: <input id="name" type="text"/></label><br/>
+            <label for="principle">Principle: <input id="principle" type="number"/></label><br/>
+            <label for="rate">Interest rate: <input id="rate" type="text"/></label><br/>
+            <br/>
+            <input type="button" onclick="addNewLoan()" value="Add Another Loan"><br/>
+            <br/>
+            <label for="rate">Extra Money this Month: <input id="extra" type="number"/></label><br/>
+            <br/>
+            <input type="button" onclick="sendForm()" value="Submit">
 
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fa fa-btn fa-trash"></i>Delete
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
         </div>
-    </div>
+    </body>
 @endsection
